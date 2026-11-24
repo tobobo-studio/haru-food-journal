@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>하루 식단</title>
+<style>
+:root{color-scheme:light;--ink:#202124;--muted:#606266;--line:#e9e9eb;--paper:#fff}
+*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font:15px/1.5 system-ui,"Malgun Gothic",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;color:var(--ink);background:#f4f4f5;border:0;border-radius:8px;padding:7px 11px;font-weight:650}button:hover{background:#e8e8eb}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid #4d4d51;outline-offset:2px}.primary{background:#252528;color:#fff}.primary:hover{background:#414145}
+.wrap{max-width:680px;margin:auto;padding-inline:22px}header{position:sticky;top:0;z-index:1;background:#fff;border-bottom:1px solid var(--line)}.bar{min-height:55px;display:flex;align-items:center;justify-content:end}.tools,.actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.tools button{font-size:13px}
+main{padding-block:17px 26px}.heading{display:flex;align-items:baseline;gap:9px;margin-bottom:13px}h1,h2,h3,p{margin:0}h1{font-size:27px;letter-spacing:-.05em}.hint,small,footer{color:var(--muted)}.day{padding:11px 0;border-top:1px solid var(--line)}.day-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.day h2{font-size:16px;letter-spacing:-.02em}.day-head strong{font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}.day-head small{font-size:11px}.food{background:none;border-radius:4px;padding:0;text-align:left;font-size:13px;font-weight:600;overflow-wrap:anywhere;max-width:100%}.food small{font-weight:450;white-space:nowrap;margin-left:4px}.extra{margin-top:4px;font-size:12px;color:var(--muted)}.extra summary,footer summary{cursor:pointer;width:fit-content}.extra p{margin-top:3px}.empty{border-top:1px solid var(--line);padding:15px 0;color:var(--muted)}footer{margin-top:12px;font-size:12px}footer p{margin-top:4px}
+input,select,textarea{min-width:0;border:1px solid #d8d8dc;border-radius:8px;background:#fff;color:var(--ink);padding:8px}dialog{width:min(540px,calc(100% - 24px));max-height:90vh;border:1px solid var(--line);border-radius:14px;padding:17px;color:var(--ink)}dialog::backdrop{background:#0007}.dialoghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.dialoghead h2{font-size:19px}.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:9px 0}label{display:grid;gap:3px;font-size:13px}.actions{justify-content:end;margin-top:12px}.danger{margin-right:auto}.error{color:var(--ink);font-weight:650;white-space:pre-wrap;margin-top:8px}.status{margin-bottom:8px;font-size:13px}.status:empty,.error:empty{display:none}textarea{width:100%;min-height:120px;resize:vertical;margin-top:8px}code{overflow-wrap:anywhere}summary{cursor:pointer}.preview{max-height:180px;overflow:auto;padding-left:22px}
+@media(max-width:480px){.wrap{padding-inline:15px}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.day{padding:15px 0}
+.day-head h2{font-size:17px}
+.day-energy{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;justify-content:end}
+.day-energy strong{font-size:21px}
+.metric-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0 8px}
+.macro{background:#f3f3f4;border-radius:8px;padding:5px 8px;display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;min-width:0}
+.macro span{color:var(--muted);font-size:11px}
+.macro b{font-size:15px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.macro em{color:var(--muted);font-size:10px;font-style:normal}
+.meal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.meal-card{border:1px solid var(--line);border-radius:10px;padding:8px 9px;min-width:0}
+.meal-title{display:flex;justify-content:space-between;gap:5px;align-items:baseline}
+.meal-title h3{font-size:14px}
+.meal-title strong{font-size:14px;font-variant-numeric:tabular-nums}
+.meal-title small{font-size:10px}
+.meal-card .metric-strip{margin:5px 0;gap:4px}
+.meal-card .macro{padding:3px 5px;gap:2px 4px}
+.meal-card .macro b{font-size:12px}
+.food-list{display:grid}
+.food-line{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:5px;padding:4px 0;width:100%;border-radius:0;border-top:1px solid var(--line)}
+.food-line small{font-size:11px;margin:0}
+@media(max-width:520px){.meal-grid{grid-template-columns:1fr}}
+
+.day-recap{background:#f5f5f6;border-radius:9px;margin-top:8px;padding:7px 10px;font-size:13px}
+.day-recap strong{margin-right:7px}
+.day-activity{color:var(--muted);font-size:12px;margin-bottom:3px}
+
+.expenditure{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0}
+.expenditure div{background:#fff;border-radius:7px;padding:5px 7px}
+.expenditure small,.expenditure strong{display:block}
+.expenditure+.extra{margin-bottom:7px}
+@media(max-width:420px){.expenditure div{padding:4px}.expenditure strong{font-size:11px}}
+
+.day-detail-add,.day-recap button{font-size:12px;padding:3px 8px}
+.day-detail-add{margin:5px 0 0}
+#dayForm>label{margin-top:6px}
+</style></head><body>
+<header><div class="wrap bar"><div class="tools"><button id="backup">백업</button><button id="openImport">채팅 가져오기</button><button class="primary" id="openEntry">＋ 기록</button></div></div></header>
+<main class="wrap">
+<div class="heading"><h1>하루 식단</h1><small>한국 시간</small></div>
+<p class="status" id="status" role="status"></p>
+<div id="feed" aria-label="날짜별 식단"></div>
+<footer><details><summary>저장 및 채팅 가져오기 안내</summary><p>기록은 이 브라우저에 저장됩니다. 영양 합계에서 —는 미입력, ≈는 추정값 포함을 뜻합니다. 다른 기기로 옮기거나 브라우저 데이터를 지우기 전에 백업 파일을 저장하세요.</p><p>채팅 기록은 자동으로 연동되지 않습니다. 채팅에서 받은 가져오기용 텍스트를 복사한 뒤 위의 ‘채팅 가져오기’에 붙여넣으세요.</p></details></footer>
+</main>
+<dialog id="quick">
+<div class="dialoghead"><h2>먹은 것 기록</h2><button type="button" data-close="quick" aria-label="닫기">×</button></div>
+<label>먹은 내용을 편하게 적어주세요<textarea id="note" placeholder="어제 아침에 바나나 한 개랑 삶은 달걀 2개 먹었어. 점심은 흰쌀밥 150g, 닭가슴살 100g"></textarea></label>
+<label>끼니를 적지 않은 경우<select id="noteMeal"><option value="">선택</option><option>아침</option><option>점심</option><option>저녁</option><option>간식</option></select></label>
+<div id="noteReview" aria-live="polite"></div><p id="noteError" class="error" role="alert"></p>
+<div class="actions"><button type="button" id="manual">음식 직접 입력</button><button type="button" id="openDay">운동·체성분·한줄평</button><button type="button" id="analyze">분석</button><button type="button" class="primary" id="saveNote" disabled>저장</button></div>
+<details class="extra"><summary>자동 분석 범위</summary><p>한국 시간으로 오늘·어제·그제와 날짜를 읽어요. 일부 기본 식품은 적은 양을 기준으로 추정해요. 메뉴나 양을 확인하기 어려운 음식은 영양 수치를 비워둬요. 바나나 한 개는 중간 크기 118g, 삶은 달걀 한 개는 큰 달걀 50g 기준이에요. 치즈스틱은 맥도날드 골든 모짜렐라 치즈스틱을 기준으로 추정해요. <a href="https://www.mcdonalds.co.kr/gmal/kor/menu/information/nutrition" target="_blank" rel="noreferrer">영양정보</a></p><p><a href="https://fdc.nal.usda.gov/" target="_blank" rel="noreferrer">USDA FoodData Central</a></p></details>
+</dialog>
+<dialog id="dayEditor">
+<div class="dialoghead"><h2>하루 세부 기록</h2><button type="button" data-close="dayEditor" aria-label="닫기">×</button></div>
+<form id="dayForm">
+<label>날짜<input name="date" type="date" required></label>
+<label>운동<input name="activity" maxlength="160" placeholder="운동 종류와 시간"></label>
+<div class="fields">
+<label>키 (cm)<input name="height" type="number" min="1" max="300" step="any"></label>
+<label>체중 (kg)<input name="weight" type="number" min="1" max="700" step="any"></label>
+<label>체지방률 (%)<input name="bodyFat" type="number" min="0" max="100" step="any"></label>
+<label>골격근량 (kg)<input name="muscle" type="number" min="0" max="300" step="any"></label>
+<label>기초대사량 (kcal)<input name="bmr" type="number" min="0" max="10000" step="any"></label>
+<label>운동 추가 소모 (kcal)<input name="exercise" maxlength="40" placeholder="수치 또는 범위"></label>
+<label>하루 총소모 (kcal)<input name="total" maxlength="40" placeholder="수치 또는 범위"></label>
+</div>
+<small>기초대사량을 비우고 체중과 체지방률을 입력하면 자동으로 추정해요.</small>
+<label>오늘의 한줄평<input name="review" maxlength="200"></label>
+<p id="dayError" class="error" role="alert"></p>
+<div class="actions"><button type="button" id="removeDay" class="danger">세부 기록 삭제</button><button class="primary">저장</button></div>
+</form></dialog>
+<dialog id="entry"><div class="dialoghead"><h2 id="entryTitle">기록 추가</h2><button type="button" data-close="entry" aria-label="닫기">×</button></div><form id="entryForm">
+<div class="fields"><label>날짜<input name="date" type="date" required></label><label>끼니<select name="meal"><option>아침</option><option>점심</option><option>저녁</option><option>간식</option></select></label><label>영양 수치<select name="quality"><option value="reported">입력값</option><option value="estimated">추정값</option></select></label></div>
+<label>음식 및 섭취량<input name="food" required maxlength="200" placeholder="음식 이름과 먹은 양"></label><div class="fields" id="nutrientInputs"></div>
+<small>모르는 영양 수치는 비워두세요.</small><p class="error" id="entryError" role="alert"></p>
+<div class="actions"><button type="button" id="remove" class="danger">삭제</button><button class="primary">저장</button></div></form></dialog>
+<dialog id="importer"><div class="dialoghead"><h2>채팅 가져오기</h2><button type="button" data-close="importer" aria-label="닫기">×</button></div>
+<p class="hint">채팅에서 받은 줄을 붙여넣거나 저장한 백업 파일을 불러오세요.</p>
+<details><summary>채팅에 요청할 문구</summary><p id="prompt">내 식단을 하루 식단 앱에 붙여넣을 수 있게 음식 하나당 한 줄로 정리해줘. 한국 시간으로 먹은 날짜를 사용하고, 아래 순서를 지켜줘. 모르는 값은 빈칸으로 두고, 추정한 수치가 있으면 마지막 칸에 ‘추정’을 써줘. 음식 이름에는 | 문자를 넣지 말아줘.</p><code id="format">날짜(YYYY-MM-DD) | 끼니(아침/점심/저녁/간식) | 음식과 양 | kcal | 탄수화물(g) | 단백질(g) | 지방(g) | 식이섬유(g) | 당류(g) | 나트륨(mg) | 추정 여부</code><div><button id="copyPrompt" type="button">요청 문구 복사</button></div></details>
+<textarea id="pasted" aria-label="채팅에서 복사한 식단 텍스트" placeholder="이곳에 식단 기록을 붙여넣으세요"></textarea>
+<label>백업 파일<input id="file" type="file" accept=".json,application/json"></label>
+<div id="review" aria-live="polite"></div><p class="error" id="importError" role="alert"></p>
+<div class="actions"><button id="preview">미리보기</button><button class="primary" id="commit" disabled>가져오기</button></div></dialog>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const meals = ['아침','점심','저녁','간식'];
+const nutrients = [['kcal','열량','kcal'],['carbs','탄수화물','g'],['protein','단백질','g'],['fat','지방','g'],['fiber','식이섬유','g'],['sugar','당류','g'],['sodium','나트륨','mg']];
+const key = 'haru-food-journal-v1';
+const fmt = new Intl.NumberFormat('ko-KR',{maximumFractionDigits:3});
+function today(){
+  const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts();
+  const part = type => parts.find(p=>p.type===type).value;
+  return [part('year'),part('month'),part('day')].join('-');
+}
+const iso = date => date.toISOString().slice(0,10);
+let records = [], dayDetails = {}, editing = null, pending = [];
+function element(tag, content, cls){
+  const node=document.createElement(tag);
+  if(content!=null) node.textContent=content;
+  if(cls) node.className=cls;
+  return node;
+}
+function dateOk(value){
+  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value)||value.startsWith('0000')) return false;
+  const date=new Date(value+'T00:00:00Z');
+  return Number.isFinite(+date)&&iso(date)===value;
+}
+function normalize(input){
+  if(!input||!dateOk(input.date)||!meals.includes(input.meal)||typeof input.food!=='string'||!input.food.trim()||input.food.trim().length>200) throw Error('날짜, 끼니, 음식 이름을 확인하세요.');
+  const item={date:input.date,meal:input.meal,food:input.food.trim(),quality:input.quality==='estimated'?'estimated':'reported'};
+  for(const [key,label] of nutrients){
+    const value=input[key];
+    if(value==null||(typeof value==='string'&&!value.trim())){item[key]=null;continue;}
+    const number=Number(value);
+    if(!['number','string'].includes(typeof value)||!Number.isFinite(number)||number<0||number>1e9) throw Error(label+' 수치를 확인하세요.');
+    item[key]=number;
+  }
+  return item;
+}
+const id = () => globalThis.crypto?.randomUUID?.() || Date.now().toString(36)+Math.random().toString(36).slice(2);
+function decode(raw){
+  if(raw?.version!==1||!Array.isArray(raw.records)) throw Error('하루 식단 백업 파일을 선택하세요.');
+  const ids=new Set();
+  return raw.records.map(row=>{
+    const item=normalize(row);
+    if(typeof row.id!=='string'||!row.id||ids.has(row.id)) throw Error('백업에 잘못된 기록 식별자가 있습니다.');
+    ids.add(row.id);
+    return {...item,id:row.id};
+  });
+}
+function read(){
+  const saved=localStorage.getItem(key);
+  const data=saved===null?{version:1,records:[]}:JSON.parse(saved);
+  return decode(data);
+}
+function persist(update){
+  const next=update(read());
+  localStorage.setItem(key,JSON.stringify({version:1,records:next}));
+  records=next;
+}
+function total(group, key){
+  const known=group.filter(row=>row[key]!=null);
+  return {display:known.length?fmt.format(known.reduce((sum,row)=>sum+row[key],0)):'—',
+    estimated:known.some(row=>row.quality==='estimated'), partial:known.length>0&&known.length<group.length};
+}
+function summary(value){return (value.estimated?'≈ ':'')+value.display;}
+const dayFormat = new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',dateStyle:'full'});
+function render(){
+  const feed=$('feed');
+  const expanded=new Set([...feed.querySelectorAll('details[open]')].map(detail=>detail.parentElement.dataset.date));
+  const days = new Map();
+  for(const row of records){
+    if(!days.has(row.date)) days.set(row.date,[]);
+    days.get(row.date).push(row);
+  }
+  for(const date of Object.keys(dayDetails)) if(!days.has(date)) days.set(date,[]);
+  feed.replaceChildren();
+  if(!days.size) feed.append(element('p','아직 식단 기록이 없어요.','empty'));
+  for(const date of [...days.keys()].sort().reverse()){
+    const rows=days.get(date), day=element('section',null,'day'), head=element('div',null,'day-head');
+    day.dataset.date=date;
+    const label=(date===today()?'오늘 · ':'')+dayFormat.format(new Date(date+'T00:00:00Z'));
+    head.append(element('h2',label),energyLabel(rows,'하루 합계'));
+    day.append(head,macroStrip(rows));
+    const grid=element('div',null,'meal-grid');
+    for(const meal of meals){
+      const group=rows.filter(row=>row.meal===meal);
+      if(!group.length) continue;
+      const card=element('section',null,'meal-card'), heading=element('div',null,'meal-title');
+      heading.append(element('h3',meal),energyLabel(group));
+      const foods=element('div',null,'food-list');
+      for(const row of group){
+        const food=element('button',null,'food food-line');
+        food.setAttribute('aria-label',row.food+' 기록 보기 및 수정');
+        food.append(element('span',row.food),element('small',row.kcal==null?'—':(row.quality==='estimated'?'≈ ':'')+fmt.format(row.kcal)+' kcal'));
+        food.onclick=()=>openEntry(row);
+        foods.append(food);
+      }
+      card.append(heading,macroStrip(group),foods);
+      grid.append(card);
+    }
+    if(grid.childElementCount) day.append(grid);
+    const extra=element('details',null,'extra');
+    extra.open=expanded.has(date);
+    const text=nutrients.slice(4).map(([key,label,unit])=>nutritionText(rows,key,label,unit)).join(' · ');
+    extra.append(element('summary','기타 영양'),element('p',text));
+    if(rows.length) day.append(extra);
+    const info=dayDetails[date];
+    if(info){
+      const recap=element('div',null,'day-recap');
+      const edit=element('button','세부 수정');
+      edit.type='button';edit.onclick=()=>openDayEditor(date,true);
+      const top=element('div',null,'day-head');
+      top.append(element('p',info.activity?'운동 · '+info.activity:'하루 세부 기록','day-activity'),edit);
+      recap.append(top);
+      const expenditure=element('div',null,'expenditure');
+      const bmr=info.bmr??(info.weight!=null&&info.bodyFat!=null?Math.round((370+21.6*info.weight*(1-info.bodyFat/100))/10)*10:null);
+      for(const [label,amount] of [['기초대사량',bmr],['운동 추가 소모',info.exercise],['하루 총소모',info.total]]){
+        if(amount==null||amount==='') continue;
+        const item=element('div');
+        item.append(element('small',label),element('strong','약 '+(typeof amount==='number'?fmt.format(amount):amount)+' kcal'));
+        expenditure.append(item);
+      }
+      if(expenditure.childElementCount) recap.append(expenditure);
+      const body=[['키',info.height,'cm'],['체중',info.weight,'kg'],['체지방률',info.bodyFat,'%'],['골격근량',info.muscle,'kg']].filter(([,value])=>value!=null);
+      if(body.length) recap.append(element('small',body.map(([label,value,unit])=>label+' '+value+unit).join(' · ')));
+      if(info.review){
+        const note=element('p');
+        note.append(element('strong','오늘의 한줄평'),document.createTextNode(info.review));
+        recap.append(note);
+      }
+      day.append(recap);
+    }else{
+      const edit=element('button','＋ 세부 기록','day-detail-add');
+      edit.type='button';edit.onclick=()=>openDayEditor(date,true);day.append(edit);
+    }
+    feed.append(day);
+  }
+}
+const dayKey=key+'-days';
+const dayForm=$('dayForm');
+const numericDetails={height:[1,300],weight:[1,700],bodyFat:[0,100],muscle:[0,300],bmr:[0,10000]};
+function normalizeDay(value){
+  if(!value||!dateOk(value.date)) throw Error('세부 기록 날짜를 확인하세요.');
+  const day={date:value.date};
+  for(const [field,[min,max]] of Object.entries(numericDetails)){
+    const raw=value[field];
+    if(raw==null||raw==='') continue;
+    const number=Number(raw);
+    if(!['number','string'].includes(typeof raw)||!Number.isFinite(number)||number<min||number>max) throw Error('체성분 또는 기초대사량 수치를 확인하세요.');
+    day[field]=number;
+  }
+  for(const [field,max] of Object.entries({activity:160,exercise:40,total:40,review:200})){
+    if(typeof value[field]!=='string'||!value[field].trim()) continue;
+    day[field]=value[field].trim().slice(0,max);
+  }
+  return day;
+}
+function readDays(){
+  const rows=JSON.parse(localStorage.getItem(dayKey)??'[]');
+  return Object.fromEntries(rows.map(row=>[row.date,normalizeDay(row)]));
+}
+function saveDays(next){
+  localStorage.setItem(dayKey,JSON.stringify(Object.values(next)));
+  dayDetails=next;
+}
+function openDayEditor(date, fixed=false){
+  dayForm.reset();
+  dayForm.elements.date.value=date;
+  dayForm.elements.date.readOnly=fixed;
+  $('dayError').textContent='';
+  loadDayFields();
+  $('dayEditor').showModal();
+}
+function loadDayFields(){
+  const existing=dayDetails[dayForm.elements.date.value];
+  for(const field of dayForm.elements){
+    if(field.name&&field.name!=='date') field.value=existing?.[field.name]??'';
+  }
+  $('removeDay').hidden=!existing;
+}
+dayForm.elements.date.onchange=loadDayFields;
+$('openDay').onclick=()=>{$('quick').close();openDayEditor(today());};
+dayForm.onsubmit=event=>{
+  event.preventDefault();
+  try{
+    const day=normalizeDay(Object.fromEntries(new FormData(dayForm)));
+    if(Object.keys(day).length===1) throw Error('저장할 내용을 한 가지 이상 입력하세요.');
+    saveDays({...readDays(),[day.date]:day});
+    $('dayEditor').close();render();status('하루 세부 기록을 저장했습니다.');
+  }catch(error){$('dayError').textContent=storageError(error);}
+};
+$('removeDay').onclick=()=>{
+  if(!confirm('이 날짜의 운동·체성분·한줄평 세부 기록을 삭제할까요?')) return;
+  try{
+    const next=readDays();
+    delete next[dayForm.elements.date.value];
+    saveDays(next);
+    $('dayEditor').close();render();status('하루 세부 기록을 삭제했습니다.');
+  }catch(error){$('dayError').textContent=storageError(error);}
+};
+function energyLabel(rows,label){
+  const value=total(rows,'kcal'), number=element('div',null,'day-energy');
+  if(label) number.append(element('small',label));
+  number.append(element('strong',value.display==='—'?'— kcal':summary(value)+' kcal'));
+  if(value.partial) number.append(element('small','일부'));
+  return number;
+}
+function macroStrip(rows){
+  const strip=element('div',null,'metric-strip');
+  for(const [key,label,unit] of nutrients.slice(1,4)){
+    const value=total(rows,key), cell=element('div',null,'macro');
+    cell.append(element('span',label),element('b',summary(value)+(value.display==='—'?'':unit)));
+    if(value.partial) cell.append(element('em','일부'));
+    strip.append(cell);
+  }
+  return strip;
+}
+function nutritionText(rows,key,label,unit){
+  const value=total(rows,key);
+  return label+' '+summary(value)+(value.display==='—'?'':unit)+(value.partial?' (일부)':'');
+}
+for(const [key,label,unit] of nutrients){
+  const wrapper=element('label',label+' ('+unit+')'), input=element('input');
+  Object.assign(input,{type:'number',min:'0',max:'1000000000',step:'any',name:key,inputMode:'decimal'});
+  wrapper.append(input);$('nutrientInputs').append(wrapper);
+}
+const form=$('entryForm');
+function openEntry(item,meal=meals[0]){
+  editing=item?.id??null;form.reset();
+  const fields=form.elements;
+  fields.date.value=item?.date??today();fields.meal.value=item?.meal??meal;
+  if(item) for(const [key,value] of Object.entries(item)) if(fields.namedItem(key)) fields.namedItem(key).value=value??'';
+  $('entryTitle').textContent=item?'기록 수정':'기록 추가';
+  $('entryError').textContent='';$('remove').hidden=!item;$('entry').showModal();fields.food.focus();
+}
+function status(message){$('status').textContent=message;}
+function storageError(error){return error?.name==='QuotaExceededError'||error?.name==='SecurityError'?'브라우저에 저장할 수 없습니다. 저장 공간과 브라우저 설정을 확인하세요.':error.message;}
+form.onsubmit=event=>{
+  event.preventDefault();
+  try{
+    const item=normalize(Object.fromEntries(new FormData(form)));
+    persist(current=>{
+      if(editing&&!current.some(row=>row.id===editing)) throw Error('이 기록은 이미 삭제되었습니다.');
+      return editing?current.map(row=>row.id===editing?{...item,id:editing}:row):[...current,{...item,id:id()}];
+    });
+    $('entry').close();render();status('기록을 저장했습니다.');
+  }catch(error){$('entryError').textContent=storageError(error);}
+};
+$('remove').onclick=()=>{
+  if(!confirm('이 음식 기록을 삭제할까요?')) return;
+  try{persist(current=>current.filter(row=>row.id!==editing));$('entry').close();render();status('기록을 삭제했습니다.');}
+  catch(error){$('entryError').textContent=storageError(error);}
+};
+// USDA FoodData Central SR Legacy values per 100 g, in nutrients order.
+const referenceFoods = [
+  [/^바나나$/,118,[89,22.84,1.09,0.33,2.6,12.23,1]], // FDC 173944
+  [/^삶은\s*(?:달걀|계란)$/,50,[155,1.12,12.58,10.61,0,1.12,124]], // FDC 173424
+  [/^(?:흰쌀밥|흰밥|쌀밥)$/,null,[130,28.17,2.69,0.28,0.4,0.05,1]], // FDC 168878
+  [/^(?:(?:구운|익힌)\s*)?닭\s*가슴살$/,null,[165,0,31.02,3.57,0,0,74]], // FDC 171477
+  [/^사과$/,null,[52,13.81,0.26,0.17,2.4,10.39,1]], // FDC 171688
+  [/^아보카도$/,null,[160,8.53,2,14.66,6.7,0.66,7]], // FDC 171705
+];
+const counters={한:1,하나:1,두:2,둘:2,세:3,셋:3,네:4,넷:4,반:0.5};
+function estimate(food){
+  const cheese=food.match(/^(?:블랙\s*)?치즈\s*스틱\s*(\d+|한|두|세|네)\s*(?:개|조각)$/);
+  if(cheese){
+    const count=counters[cheese[1]]??Number(cheese[1]);
+    // McDonald's Korea Golden Mozzarella Cheese Sticks, 2 pieces.
+    return {quality:'estimated',kcal:Math.round(82.5*count),carbs:6.4*count,protein:4*count,fat:Math.round(14*count/3*10)/10,fiber:0.5*count,sugar:0.5*count,sodium:144*count};
+  }
+
+  const portion=food.match(/^(.+?)\s*(\d+(?:\.\d+)?|하나|둘|셋|넷|한|두|세|네|반)\s*(kg|g|그램|개)?$/i);
+  if(!portion) return {};
+  const [,name,count,unit]=portion;
+  if(!unit&&!Object.hasOwn(counters,count)) return {};
+  const foodRef=referenceFoods.find(([pattern])=>pattern.test(name.trim()));
+  if(!foodRef) return {};
+  const [,piece,values]=foodRef, quantity=counters[count]??Number(count);
+  const grams=unit?.toLowerCase()==='kg'?quantity*1000:/^(g|그램)$/i.test(unit??'')?quantity:piece==null?null:quantity*piece;
+  if(grams==null||grams<=0) return {};
+  return {quality:'estimated',...Object.fromEntries(nutrients.map(([key],i)=>[key,Math.round(values[i]*grams*(i===0?1:10)/100)/(i===0?1:10)]))};
+}
+function analyzeNote(input,fallback){
+  const tokens=input.trim().split(/(^|\s)(\d{4}-\d{2}-\d{2}|오늘|어제|그제)(?=\s|$|[:,])/).filter(Boolean);
+  let date=today(), meal=fallback;
+  const result=[];
+  for(const token of tokens){
+    const part=token.trim();
+    if(!part) continue;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(part)){
+      if(!dateOk(part)) throw Error('날짜를 확인하세요.');
+      date=part;meal=fallback;continue;
+    }
+    if(['오늘','어제','그제'].includes(part)){
+      const base=new Date(today()+'T00:00:00Z');
+      base.setUTCDate(base.getUTCDate()-['오늘','어제','그제'].indexOf(part));
+      date=iso(base);meal=fallback;continue;
+    }
+    const portions=part.replace(/(^|[\s,.;])((?:아침|점심|저녁|간식|야식)(?:으로|에는|은|에|으로는)?)(?=$|[\s:：])/g,'$1\u0001$2\u0001').split('\u0001');
+    for(const portion of portions){
+      const line=portion.trim();
+      const marker=line.match(/^(아침|점심|저녁|간식|야식)(?:으로|에는|은|에|으로는)?$/);
+      if(marker){meal=marker[1]==='야식'?'간식':marker[1];continue;}
+      const cleaned=line.replace(/^[\s:：,.;]+|[\s,.;!?]+$/g,'').replace(/\s*(?:먹었어요|먹었어|먹었습니다|먹음|마셨어요|마셨어|마심|먹고|마시고)$/,'');
+      for(const piece of cleaned.split(/[,;\n+]|\s+및\s+|(?:그리고|이랑|랑|하고)\s+/)){
+        const food=piece.trim().replace(/\s*(?:먹었어요|먹었어|먹었습니다|먹음|마셨어요|마셨어|마심|먹고|마시고)$/,'').replace(/[.!?]+$/,'').trim();
+        if(!food) continue;
+        if(!meal) throw Error('끼니를 적거나, 아래에서 끼니를 선택하세요.');
+        const energy=food.match(/\s*\(?\s*(\d+(?:\.\d+)?)\s*(?:kcal|칼로리)\s*\)?$/i);
+        const name=energy?food.slice(0,energy.index).trim():food;
+        const values=energy?{kcal:Number(energy[1])}:estimate(name);
+        result.push({...normalize({date,meal,food:name,...values}),id:id()});
+      }
+    }
+  }
+  if(!result.length) throw Error('먹은 음식을 적어주세요.');
+  return result;
+}
+let noteRows=[];
+function resetNote(){
+  noteRows=[];$('noteReview').replaceChildren();$('noteError').textContent='';$('saveNote').disabled=true;
+}
+$('openEntry').onclick=()=>{
+  $('note').value='';$('noteMeal').value='';resetNote();$('quick').showModal();$('note').focus();
+};
+$('manual').onclick=()=>{$('quick').close();openEntry(null);};
+$('note').oninput=resetNote;
+$('noteMeal').onchange=resetNote;
+$('analyze').onclick=()=>{
+  resetNote();
+  try{
+    noteRows=analyzeNote($('note').value,$('noteMeal').value);
+    const list=element('ul',null,'preview');
+    for(const row of noteRows){
+      const values=nutrients.slice(0,4).filter(([key])=>row[key]!=null).map(([key,label,unit])=>label+' '+fmt.format(row[key])+' '+unit);
+      const detail=values.length?(row.quality==='estimated'?'≈ ':'')+values.join(' · '):'영양 수치 미입력';
+      const item=element('li',row.date+' · '+row.meal+' · '+row.food);
+      item.append(element('div',detail,'hint'));list.append(item);
+    }
+    $('noteReview').append(list);$('saveNote').disabled=false;
+  }catch(error){$('noteError').textContent=error.message;}
+};
+$('saveNote').onclick=()=>{
+  if(!noteRows.length) return;
+  try{
+    persist(current=>[...current,...noteRows]);
+    const count=noteRows.length;
+    $('quick').close();resetNote();render();status(count+'건을 저장했습니다.');
+  }catch(error){$('noteError').textContent=storageError(error);}
+};
+document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>$ (button.dataset.close).close());
+function clearPreview(){
+  pending=[];pendingDays=[];$('commit').disabled=true;$('review').replaceChildren();$('importError').textContent='';
+}
+$('openImport').onclick=()=>{$('pasted').value='';$('file').value='';clearPreview();$('importer').showModal();};
+$('pasted').oninput=()=>{$('file').value='';clearPreview();};
+$('file').onchange=()=>{if($('file').files.length) $('pasted').value='';clearPreview();};
+$('copyPrompt').onclick=async()=>{
+  const prompt=$('prompt').textContent+'\n'+$('format').textContent;
+  try{await navigator.clipboard.writeText(prompt);$('copyPrompt').textContent='복사 완료';}
+  catch{const range=document.createRange();range.setStartBefore($('prompt'));range.setEndAfter($('format'));const selection=getSelection();selection.removeAllRanges();selection.addRange(range);$('importError').textContent='선택된 요청 문구를 복사하세요.';}
+};
+function parse(text){
+  const result=[];
+  for(const [index,raw] of text.split(/\r?\n/).entries()){
+    const line=raw.trim();
+    if(!line||/^```\w*$/.test(line)||/^\|?\s*:?-{2}/.test(line)) continue;
+    const fields=line.replace(/^\|/,'').trim().split('|').map(field=>field.trim());
+    if(/^날짜(?:\s|\(|$)/.test(fields[0])) continue;
+    if(line.endsWith('|')&&fields.length>11) fields.pop();
+    if(fields.length<3||fields.length>11) throw Error((index+1)+'번째 줄의 칸 수를 확인하세요.');
+    const [date,meal,food,...values]=fields, row={date,meal,food,quality:['추정','estimated','예'].includes(values[7])?'estimated':'reported'};
+    nutrients.forEach(([key],i)=>{row[key]=['—','-','미입력'].includes(values[i])?null:values[i];});
+    try{result.push({...normalize(row),id:id()});}
+    catch(error){throw Error((index+1)+'번째 줄 · '+error.message);}
+  }
+  return result;
+}
+function unique(incoming,current,backup){
+  const fingerprint=({id,...item})=>JSON.stringify(item);
+  const existing=new Set(current.map(backup?row=>row.id:fingerprint));
+  return incoming.filter(row=>{
+    const value=backup?row.id:fingerprint(row);
+    if(existing.has(value)) return false;
+    existing.add(value);return true;
+  });
+}
+let revision=0, backupMode=false, pendingDays=[];
+$('pasted').addEventListener('input',()=>revision++);
+$('file').addEventListener('change',()=>revision++);
+$('importer').addEventListener('close',()=>revision++);
+$('preview').onclick=async()=>{
+  clearPreview();const attempt=++revision;
+  try{
+    const file=$('file').files[0], input=$('pasted').value;
+    const data=file?JSON.parse((await file.text()).replace(/^\uFEFF/,'')):null;
+    const all=file?decode(data):parse(input);
+    const details=file&&Array.isArray(data.days)?data.days.map(normalizeDay):[];
+    if(attempt!==revision) return;
+    if(!all.length&&!details.length) throw Error('가져올 기록을 입력하세요.');
+    backupMode=Boolean(file);pending=unique(all,read(),backupMode);
+    const list=element('ul',null,'preview');
+    for(const row of pending) list.append(element('li',row.date+' · '+row.meal+' · '+row.food+(row.kcal==null?'':' · '+fmt.format(row.kcal)+' kcal')));
+    $('review').append(element('p','추가할 기록 '+pending.length+'건 · 중복 '+(all.length-pending.length)+'건'),list);
+    const currentDays=readDays();
+    pendingDays=details.filter(row=>!currentDays[row.date]);
+    if(details.length) $('review').append(element('p','추가할 하루 세부 기록 '+pendingDays.length+'건 · 기존 날짜 '+(details.length-pendingDays.length)+'건'));
+    $('commit').disabled=!pending.length&&!pendingDays.length;
+  }catch(error){if(attempt===revision) $('importError').textContent=storageError(error);}
+};
+$('commit').onclick=()=>{
+  try{
+    let added;
+    persist(current=>{added=unique(pending,current,backupMode);return [...current,...added];});
+    const currentDays=readDays();
+    const addedDays=pendingDays.filter(row=>!currentDays[row.date]);
+    if(addedDays.length) saveDays({...currentDays,...Object.fromEntries(addedDays.map(row=>[row.date,row]))});
+    $('importer').close();render();
+    status('음식 '+added.length+'건 · 하루 세부 기록 '+addedDays.length+'건을 가져왔습니다.');
+  }catch(error){$('importError').textContent=storageError(error);}
+};
+$('backup').onclick=()=>{
+  try{
+    const latest=read(), blob=new Blob([JSON.stringify({version:1,records:latest,days:Object.values(readDays())},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob), link=element('a');
+    link.href=url;link.download='하루-식단-'+today()+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(error){status(storageError(error));}
+};
+window.addEventListener('storage',event=>{if(event.key===key||event.key===dayKey||event.key===null){try{records=read();dayDetails=readDays();render();}catch(error){status(storageError(error));}}});
+let currentDay=today();
+setInterval(()=>{const now=today();if(now!==currentDay){currentDay=now;render();}},15000);
+try{records=read();dayDetails=readDays();}
+catch(error){status('저장된 기록을 읽을 수 없습니다. '+storageError(error));}
+render();
+</script></body></html>
