@@ -533,4 +533,30 @@ setInterval(()=>{const now=today();if(now!==currentDay){currentDay=now;render();
 try{records=read();dayDetails=readDays();}
 catch(error){status('저장된 기록을 읽을 수 없습니다. '+storageError(error));}
 render();
+
+const sharedSnapshot={"iv":"HarE4cluBLeOLwu4","data":"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"};
+async function restorePrivateSnapshot(){
+  const access=location.hash.match(/^#private=([a-f0-9]{64})$/);
+  const restoredKey=key+'-private-snapshot-v1';
+  if(!access||localStorage.getItem(restoredKey)==='1') return;
+  const unpack=text=>Uint8Array.from(atob(text),char=>char.charCodeAt(0));
+  try{
+    const rawKey=Uint8Array.from(access[1].match(/../g),pair=>parseInt(pair,16));
+    const accessKey=await crypto.subtle.importKey('raw',rawKey,{name:'AES-GCM'},false,['decrypt']);
+    const plaintext=await crypto.subtle.decrypt({name:'AES-GCM',iv:unpack(sharedSnapshot.iv)},accessKey,unpack(sharedSnapshot.data));
+    const snapshot=JSON.parse(new TextDecoder().decode(plaintext));
+    const incoming=decode(snapshot);
+    const details=snapshot.days.map(normalizeDay);
+    const identity=row=>JSON.stringify([row.date,row.meal,row.food]);
+    persist(current=>{
+      const names=new Set(current.map(identity));
+      return [...current,...unique(incoming,current,true).filter(row=>!names.has(identity(row)))];
+    });
+    const existing=readDays();
+    saveDays({...Object.fromEntries(details.map(row=>[row.date,row])),...existing});
+    localStorage.setItem(restoredKey,'1');
+    render();
+  }catch(error){status('개인 기록을 열 수 없습니다. 전체 개인 링크를 다시 확인하세요.');}
+}
+restorePrivateSnapshot();
 </script></body></html>
