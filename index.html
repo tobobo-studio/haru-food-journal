@@ -44,6 +44,10 @@ input,select,textarea{min-width:0;border:1px solid #d8d8dc;border-radius:8px;bac
 .day-detail-add,.day-recap button{font-size:12px;padding:3px 8px}
 .day-detail-add{margin:5px 0 0}
 #dayForm>label{margin-top:6px}
+
+.food-values{display:flex;flex-wrap:wrap;gap:1px 8px;margin:0 0 5px;color:var(--muted);font-size:11px}
+.food-values span{white-space:nowrap}
+.day-nutrients{margin-top:6px}
 </style></head><body>
 <header><div class="wrap bar"><div class="tools"><button id="backup">백업</button><button id="openImport">채팅 가져오기</button><button class="primary" id="openEntry">＋ 기록</button></div></div></header>
 <main class="wrap">
@@ -158,7 +162,6 @@ function summary(value){return (value.estimated?'≈ ':'')+value.display;}
 const dayFormat = new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',dateStyle:'full'});
 function render(){
   const feed=$('feed');
-  const expanded=new Set([...feed.querySelectorAll('details[open]')].map(detail=>detail.parentElement.dataset.date));
   const days = new Map();
   for(const row of records){
     if(!days.has(row.date)) days.set(row.date,[]);
@@ -185,16 +188,22 @@ function render(){
         food.setAttribute('aria-label',row.food+' 기록 보기 및 수정');
         food.append(element('span',row.food),element('small',row.kcal==null?'—':(row.quality==='estimated'?'≈ ':'')+fmt.format(row.kcal)+' kcal'));
         food.onclick=()=>openEntry(row);
-        foods.append(food);
+        const rowDetails=element('div',null,'food-values');
+        for(const [key,label,unit] of nutrients.slice(1)){
+          if(row[key]!=null) rowDetails.append(element('span',label+' '+(row.quality==='estimated'?'≈':'')+fmt.format(row[key])+unit));
+        }
+        const foodRow=element('div',null,'food-row');
+        foodRow.append(food);
+        if(rowDetails.childElementCount) foodRow.append(rowDetails);
+        foods.append(foodRow);
       }
       card.append(heading,macroStrip(group),foods);
       grid.append(card);
     }
     if(grid.childElementCount) day.append(grid);
-    const extra=element('details',null,'extra');
-    extra.open=expanded.has(date);
+    const extra=element('p',null,'extra day-nutrients');
     const text=nutrients.slice(4).map(([key,label,unit])=>nutritionText(rows,key,label,unit)).join(' · ');
-    extra.append(element('summary','기타 영양'),element('p',text));
+    extra.textContent=text;
     if(rows.length) day.append(extra);
     const info=dayDetails[date];
     if(info){
